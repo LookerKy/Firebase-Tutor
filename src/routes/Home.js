@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { dbService } from 'firebaseInstance';
 
-const Home = () => {
+const Home = ({ userObj }) => {
     const [inputMessage, setInputMessage] = useState('');
     const [messages, setMessages] = useState([]);
-
-    const getMessage = async () => {
+    /** 예전 방식 collection으로 부터 get을로 documents 데이터를 가져와 foreach를 통해 데이터 set**/
+    /*const getMessage = async () => {
         const response = await dbService.collection('tweets').get();
         response.forEach((document) => {
             const messageObject = {
@@ -15,25 +15,36 @@ const Home = () => {
             setMessages((prev) => [messageObject, ...prev]);
             // setMessages(prev => [document.data(), ...prev])
         });
-    };
+    };*/
+
     useEffect(() => {
-        getMessage();
+        /*getMessage();*/
+        dbService.collection("tweets").onSnapshot(snapshot => {
+            const messageArray = snapshot.docs.map(doc =>({
+                id : doc.id,
+                ...doc.data()
+            }))
+            console.log(messageArray)
+            setMessages(messageArray)
+        })
     }, []);
+
     const onSubmit = async (event) => {
         event.preventDefault();
         await dbService.collection('tweets').add({
             message: inputMessage,
             createAt: Date.now(),
+            creatorId: userObj.uid,
         });
         setInputMessage('');
     };
+
     const onChange = (event) => {
         const {
             target: { value },
         } = event;
         setInputMessage(value);
     };
-    console.log(messages);
     return (
         <div>
             <form onSubmit={onSubmit}>
