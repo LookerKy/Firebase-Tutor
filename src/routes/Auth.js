@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthService } from '../firebaseInstance';
+import { AuthService, firebaseInstance } from '../firebaseInstance';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -36,7 +36,21 @@ const Auth = () => {
     }
   };
 
-  const onToggleAccount = () => setIsNewAccount(!isNewAccount);
+  const toggleAccount = () => setIsNewAccount(!isNewAccount);
+
+  const socialAccount = async (event) => {
+    const {
+      target: { name },
+    } = event;
+    let provider;
+    if (name === 'google') {
+      provider = new firebaseInstance.auth.GoogleAuthProvider();
+    } else if (name === 'github') {
+      provider = new firebaseInstance.auth.GithubAuthProvider();
+    }
+    /* 구글과 깃허브 이메일이 동일하면 안됨 */
+    await AuthService.signInWithPopup(provider)
+  };
 
   return (
     <div>
@@ -64,9 +78,15 @@ const Auth = () => {
         )}
         {error}
       </form>
-        <span onClick={onToggleAccount}>{isNewAccount ? "Sign In" : "Sign Up"}</span>
-      <button>Google로 계속하기</button>
-      <button>Github로 계속하기</button>
+      <span onClick={toggleAccount}>
+        {isNewAccount ? 'Sign In' : 'Sign Up'}
+      </span>
+      <button onClick={socialAccount} name="google">
+        Google로 계속하기
+      </button>
+      <button onClick={socialAccount} name="github">
+        Github로 계속하기
+      </button>
     </div>
   );
 };
